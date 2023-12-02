@@ -1,93 +1,71 @@
-# Each line originally contained a specific calibration value that the Elves now need to recover.
-# On each line, the calibration value can be found by combining the first digit and the last digit (in that order) to form a single two-digit number.
-# What is the sum of all of the calibration values?
+# Each line originally contained a specific calibration value that the Elves
+# now need to recover. On each line, the calibration value can be found by
+# combining the first digit and the last digit (in that order) to form a
+# single two-digit number. What is the sum of all of the calibration values?
 
-# Recover calibration function - part 1
+# Digit constants
 
-Digits = '123456789'
-def calibration_recovery(line)
-  first, last = '', ''
+DIGITS = '123456789'
+DIGITS_STRING = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
 
-  # Recover first digit
+# Digit recovery functions
+
+def recover_digit(line)
   line.each_char do |char|
-    if Digits.include?(char)
-      first = char
-      break
-    end
+    return char if DIGITS.include?(char)
   end
-
-  # Recover last digit
-  line.reverse.each_char do |char|
-    if Digits.include?(char)
-      last = char
-      break
-    end
-  end
-
-  first + last
 end
 
-# Recover calibration function - part 2
-
-DigitsString = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
-DigitsStringReversed = ["eno", "owt", "eerht", "ruof", "evif", "xis", "neves", "thgie", "enin"]
-def calibration_recovery2(line)
-  first, last = '', ''
+def recover_digit_string(line, digit_array)
   string_digit, int_digit = [line.length], []
 
-  # Recover first digit
-  DigitsString.each_with_index do |digit, i|
+  digit_array.each_with_index do |digit, i|
     digit_index = line.index(digit)
-    if digit_index.nil? then next end
+    next if digit_index.nil?
     if digit_index < string_digit[0]
       string_digit = [digit_index, i+1]
     end
   end
 
   line.each_char.with_index do |char, i|
-    if Digits.include?(char)
+    if DIGITS.include?(char)
       int_digit = [i, char]
       break
     end
   end
 
   if string_digit[0] < int_digit[0]
-    first = string_digit[1]
+    digit = string_digit[1]
   else
-    first = int_digit[1]
+    digit = int_digit[1]
   end
 
-  # Recover last digit
-  string_digit = [line.length]
-  DigitsStringReversed.each_with_index do |digit, i|
-    digit_index = line.reverse.index(digit)
-    if digit_index.nil? then next end
-    if digit_index < string_digit[0]
-      string_digit = [digit_index, i+1]
-    end
-  end
-
-  line.reverse.each_char.with_index do |char, i|
-    if Digits.include?(char)
-      int_digit = [i, char]
-      break
-    end
-  end
-
-  if string_digit[0] < int_digit[0]
-    last = string_digit[1]
-  else
-    last = int_digit[1]
-  end
-
-  first.to_s + last.to_s
+  digit.to_s
 end
 
-# Read input
+# Recover calibration function - puzzle part 1
+
+def calibration_recovery(line)
+  first = recover_digit(line)
+  last = recover_digit(line.reverse)
+
+  first + last
+end
+
+# Recover calibration function - puzzle part 2
+
+def calibration_recovery2(line)
+  first = recover_digit_string(line, DIGITS_STRING)
+  last = recover_digit_string(line.reverse, DIGITS_STRING.map(&:reverse))
+
+  first + last
+end
+
 dir = File.join(File.dirname(__FILE__),'input.txt')
 input = File.read(dir).split
 
 # Solve puzzle part 1
+
 sum = 0
 input.each do |line|
   sum += calibration_recovery(line).to_i
@@ -95,6 +73,7 @@ end
 puts "Part 1 solution is: #{sum}"
 
 # Solve puzzle part 2
+
 sum = 0
 input.each do |line|
   sum += calibration_recovery2(line).to_i
