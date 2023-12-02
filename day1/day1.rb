@@ -61,6 +61,8 @@ def calibration_recovery2(line)
   first + last
 end
 
+# Read input
+
 dir = File.join(File.dirname(__FILE__),'input.txt')
 input = File.read(dir).split
 
