@@ -12,32 +12,39 @@
 # Read input
 
 dir = File.join(File.dirname(__FILE__),'input.txt')
-input = File.read(dir).delete("^1234567890 \n").lines.map { |line| line.split.map(&:to_i) }
+input = File.read(dir).delete("^1234567890 \n").lines.map(&:split)
 
-races = [] # [time, record]
-input[0].each_index do |i|
-  races.push([input[0][i],input[1][i]])
-end
+def race_wins(race)
+  time, record = race[0].to_i, race[1].to_i
 
-# Solve puzzle - part 1
-
-margin_of_error = 1
-races.each do |race|
-  time = race[0]
-  record = race[1]
-  speed, wins = 0, 0
-  0.upto(time/2) do |seconds|
-    distance = speed * (time - seconds)
+  wins = 0
+  0.upto(time/2) do |speed|
+    distance = speed * (time - speed)
     wins += 1 if distance > record
-    speed += 1
   end
+
   if time.odd?
     wins *= 2
   else
     wins *= 2
     wins -= 1
   end
-  margin_of_error *= wins
 end
 
-puts "Part 1 solution is: #{margin_of_error}"
+# Solve puzzle - part 1
+
+wins_multiplied = 1
+input[0].each_index do |i|
+  wins_multiplied *= race_wins([input[0][i], input[1][i]])
+end
+
+puts "Part 1 solution is: #{wins_multiplied}"
+
+# There's really only one race - ignore the spaces between the numbers on each line.
+# How many ways can you beat the record in this one much longer race?
+
+# Solve puzzle - part 2
+
+long_race = input.map(&:join)
+
+puts "Part 2 solution is: #{race_wins(long_race)}"
