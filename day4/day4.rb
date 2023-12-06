@@ -18,15 +18,16 @@
 # Read input
 
 dir = File.join(File.dirname(__FILE__),'input.txt')
-input = File.read(dir).lines.map { |line| line[10..-2] }
+input = File.read(dir).delete("^|1234567890 \n").lines
 
 # Solve puzzle
 
 score = 0
 scratchcards = Array.new(input.length, 1)
-input.each_with_index do |line, card_n|
+input.each do |line|
   card = line.split('|')
   winners, numbers = card[0].split, card[1].split
+  card_n = winners.shift.to_i - 1
 
   matches = 0
   numbers.each { |num| matches += 1 if winners.include?(num) }

@@ -13,14 +13,12 @@ input = File.read(dir).lines
 
 def adjacent_positions(symbols)
   positions = []
-  line = symbols[0]
-  index = symbols[1]
+  line_i = symbols[0]
+  char_i = symbols[1]
   1.downto(-1) do |x|
     1.downto(-1) do |y|
       next if x == 0 && y == 0
-      unless line - y < 0 || index - x < 0 || line - y > 140 || index - x > 140
-        positions.push([line - y, index - x])
-      end
+      positions.push([line_i - y, char_i - x])
     end
   end
   positions
@@ -31,7 +29,7 @@ end
 symbols = [] # [[line, index]]
 gears = [] # [[line, index]]
 numbers = []  # [number, [[line, index]]]
-(0...input.length).each do |line_i|
+input.each_index do |line_i|
   num = ''
   input[line_i].each_char.with_index do |char, char_i|
     if ('0'..'9').include?(char)
@@ -39,8 +37,8 @@ numbers = []  # [number, [[line, index]]]
     else
       unless num.empty?
         num_pos = []
-        (1..num.length).each do |n|
-          num_pos.push([line_i, char_i - n])
+        1.upto(num.length) do |num_i|
+          num_pos.push([line_i, char_i - num_i])
         end
         numbers.push([num.to_i, num_pos])
         num = ''
@@ -76,7 +74,7 @@ puts "Part 1 solution is: #{part_sum}"
 # need to find the gear ratio of every gear and add them all up so that the
 # engineer can figure out which gear needs to be replaced.
 
-# Solve puzzle - Part 2
+# Solve puzzle - part 2
 
 gear_sum = 0
 gears.each do |gear|
