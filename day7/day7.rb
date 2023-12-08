@@ -45,11 +45,17 @@ input = File.read(dir).lines.map(&:split)
 
 # Base 13 to determine hand strength
 
-def hand_strength(hand)
-  strength = 0
+def hand_strength(hand, joker = false)
+  if joker
+    labels = LABELS.dup
+    labels.unshift(labels.delete_at(9))
+  else
+    labels = LABELS
+  end
 
+  strength = 0
   hand.reverse.each_char.with_index do |label, i|
-    strength += 13 ** i * LABELS.index(label)
+    strength += 13 ** i * labels.index(label)
   end
 
   strength
@@ -57,55 +63,61 @@ end
 
 # Determine hand type
 
-def hand_type(hand)
+def hand_type(hand, joker = false)
   cards = Hash.new
-  type = 0
 
-  hand.each_char do |card|
-    unless cards.has_key?(card)
-      card_count = hand.count(card)
-      cards[card.to_sym] = card_count
-    end
+  # Five of a kind = 6, Four = 5, Full house = 4, Three = 3, Two pairs = 2, One pair = 1, High card = 0
+
+  hand.each_char do |label|
+    card_count = hand.count(label)
+    return 6 if card_count == 5
+    cards[label.to_sym] = card_count unless cards.has_key?(label.to_sym)
   end
 
-  cards.each_value do |count|
-    case count
-    when 5 # Five of a kind = 6
-      type = 6
-    when 4 # Four of a kind = 5
-      type = 5
-    when 3 # 3 of a kind = 3 | Full house = 4
-      type += 3
-    when 2 # One pair = 1 | Two pairs = 2
-      type += 1
-    end
+  if joker && !cards[:J].nil?
+    return 6 if cards.length == 2
+    joker_count = cards.delete(:J)
+    cards.transform_values! { |count| count + joker_count }
   end
 
-  type
+  case cards.length
+  when 2
+    cards.value?(4) ? 5 : 4
+  when 3
+    cards.value?(3) ? 3 : 2
+  when 4
+    1
+  when 5
+    0
+  end
+
 end
 
-# Solve puzzle - part 1
+# Solve puzzle
+
+def calculate_winnings(games, joker = false)
+  games_by_type = Array.new(7) { Array.new }
+
+  games.each do |game|
+    hand, bid = game
+
+    type = hand_type(hand, joker)
+    strength = hand_strength(hand, joker)
+
+    games_by_type[type].push({bid: bid.to_i, strength: strength})
+  end
+
+  ranked_bids = games_by_type.
+                flat_map { |type| type.sort_by { |game| game[:strength] } }.
+                map { |game| game[:bid] }
+
+  winnings = 0
+  ranked_bids.each_with_index { |bid, rank| winnings += bid * (rank + 1) }
+
+  winnings
+end
 
 games = input
 
-games_by_type = Array.new(7) { Array.new }
-games.each do |game|
-  hand, bid = game
-
-  type = hand_type(hand)
-  strength = hand_strength(hand)
-
-  games_by_type[type].push({bid: bid.to_i, strength: strength})
-end
-
-ranked_bids = games_by_type.
-              flat_map { |type| type.sort_by { |game| game[:strength] } }.
-              map { |game| game[:bid] }
-
-winnings = 0
-ranked_bids.each_with_index do |bid, rank|
-  rank += 1
-  winnings += bid * rank
-end
-
-puts "Part 1 solution is: #{winnings}"
+puts "Part 1 solution is: #{calculate_winnings(games)}"
+puts "Part 2 solution is: #{calculate_winnings(games, true)}"
